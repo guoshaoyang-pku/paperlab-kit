@@ -5,9 +5,10 @@ Engines
   astra : gpt-6-astra via the local vendor-specific Codex relay copy
           (`codex exec -` reads the prompt on stdin; CODEX_HOME comes from
           $WRITER_CODEX_HOME, default ${WRITER_CODEX_HOME:-~/.codex-writer})
-  fable : claude-fable-5 via an OpenAI-compatible endpoint
-          (key file $WRITER_EVAL_KEYS, default ~/paperlab-keys/eval_keys.json,
-          entry "vapi"; loaded at runtime, never printed or written anywhere)
+  fable : claude-fable-5 via any OpenAI-compatible endpoint
+          (credentials file $WRITER_CREDENTIALS, default
+          ~/paperlab-keys/credentials.json, entry "fable"; loaded at runtime,
+          never printed or written anywhere)
 
 No credential lives in this file, in the skill docs, or in the usage log.
 
@@ -21,7 +22,7 @@ to --out and echoed on stdout; a status line goes to stderr.
 
 Every call appends one JSONL line to the usage log -- default
 ~/.verdent/logs/writer-engines.jsonl, or --log PATH for a project-local
-AI-disclosure log (ca-worldmodels passes --log data/paper/ai_usage_log.jsonl).
+AI-disclosure log (paper projects pass --log <project>/data/paper/ai_usage_log.jsonl).
 The log records engine/model/task/sizes only -- never credentials.
 """
 import argparse
@@ -36,8 +37,9 @@ import urllib.request
 from pathlib import Path
 
 LOG_DEFAULT = Path.home() / ".verdent" / "logs" / "writer-engines.jsonl"
-EVAL_KEYS = Path(os.environ.get("WRITER_EVAL_KEYS",
-    str(Path.home() / "paperlab-keys/eval_keys.json")))
+CRED_FILE = Path(os.environ.get(
+    "WRITER_CREDENTIALS",
+    str(Path.home() / "paperlab-keys/credentials.json")))
 
 DEFAULTS = {"astra": "gpt-6-astra", "fable": "claude-fable-5"}
 
@@ -70,17 +72,17 @@ def call_astra(prompt: str, *, model: str, timeout: float) -> str:
 
 def call_fable(prompt: str, *, model: str, system: str, max_tokens,
                temperature: float, timeout: float) -> str:
-    key_doc = json.loads(EVAL_KEYS.read_text())
-    vapi = key_doc["vapi"]
+    key_doc = json.loads(CRED_FILE.read_text())
+    cred = key_doc["fable"]
     messages = ([{"role": "system", "content": system}] if system else [])
     messages.append({"role": "user", "content": prompt})
     body = {"model": model, "messages": messages, "temperature": temperature}
     if max_tokens is not None:  # default: no cap (agent-calling convention)
         body["max_tokens"] = max_tokens
     req = urllib.request.Request(
-        vapi["base_url"].rstrip("/") + "/chat/completions",
+        cred["base_url"].rstrip("/") + "/chat/completions",
         data=json.dumps(body).encode(),
-        headers={"Authorization": "Bearer " + vapi["api_key"],
+        headers={"Authorization": "Bearer " + cred["api_key"],
                  "Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         r = json.load(resp)

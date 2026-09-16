@@ -40,9 +40,8 @@ register or read them speculatively.
 
 ## Engine routing (project context)
 
-When working inside `ca-worldmodels`, this router supplies the WRITING GUIDANCE;
-prose production still goes through the project's two-layer protocol: dispatch
-to astra/fable via `scripts/paperlab/call_model.py`, fact-check every number
-against `docs/RESULTS.md`, and report to the author in Chinese (see project
-skills `paper-en` / `paper-review`). Outside that project, follow the sub-skill
-directly with your own capabilities.
+In a paperlab-equipped project, this router supplies the WRITING GUIDANCE layer;
+prose production goes through the two-tier protocol (dispatch to the engines via
+`skills/writer-engines/scripts/call_model.py`), while the main agent fact-checks
+every number against the project's registered results and reports to the author
+in their language. Outside such projects, follow the sub-skill directly.

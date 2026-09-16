@@ -1,0 +1,7 @@
+{
+  "vapi": {
+    "base_url": "https://your-openai-compatible-endpoint/v1",
+    "api_key": "PASTE_YOUR_KEY_HERE",
+    "models": ["claude-fable-5"]
+  }
+}
